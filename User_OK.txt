@@ -1,0 +1,209 @@
+*** Settings ***
+Resource          resource.txt
+
+*** Test Cases ***
+1.1 SendChangeMobile
+    [Documentation]    /api/user/code/sendChangeMobile?mobile=19999999901&codeType=sms
+    ...    更换手机 发送短信Code
+    ...
+    ...    select code from linklaws_test.code where account='19999999901' and state=1 order by id desc;
+    ...
+    ...
+    ...    mobile_used_1 to mobile_new_1
+    [Tags]    code-controller
+    [Setup]    Login    ${mobile_used_1}
+    SendChangeMobile    ${mobile_new_1}
+    [Teardown]    Logout
+
+1.2 SendCodeRegister
+    [Documentation]    GET /api/user/code/sendCodeRegister?mobile=19988880110&codeType=sms
+    ...    获取注册验证码
+    ...
+    ...    mobile_new_0
+    [Tags]    code-controller
+    [Setup]    Login
+    SendCodeRegister    ${mobile_new_0}
+    [Teardown]    Logout
+
+1.3 SendCodeResetPassword
+    [Documentation]    GET /api/user/code/sendCodeResetPassword?mobile=13923803989&codeType=sms
+    ...    重置密码发送短信
+    [Tags]    code-controller
+    [Setup]    Login
+    SendCodeResetPassword    ${mobile_used_0}
+    [Teardown]    Logout
+
+2.1 Detail
+    [Documentation]    /api/user/detail
+    ...    获取用户详细信息
+    ...    message = 操作成功
+    [Tags]    user-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/user/detail
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${Resp_Keys}    get dictionary keys    ${Resp_data}
+    ${Resp_Items}    get dictionary items    ${Resp_data}
+    ${Resp_Values}    get dictionary values    ${Resp_data}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+2.2 Edit1
+    [Documentation]    /api/user/edit?name=Charlie&majorId=7&vocationId=18&serveId=37&lawFirm=%E6%AD%A3%E7%82%B9%E5%BE%8B%E6%89%80&motto=Hello%20world%202017
+    ...    改专业，行业，领域，所在律所，个人签名
+    ...    message = 操作成功
+    [Tags]    user-controller
+    [Setup]    Login    ${mobile_used_0}
+    ${Resp}    Post Request    mysess    /api/user/edit?name=Charlie&majorId=7&vocationId=18&serveId=37&lawFirm=%E6%AD%A3%E7%82%B9%E5%BE%8B%E6%89%80&motto=Hello%20world%202017
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    conn_db
+    ${motto}    query    select motto from linklaws_test.user where mobile= ${mobile_used_0} and state=1 order by id desc
+    Should match    ${motto[0][0]}    Hello world 2017
+    Disconnect From Database
+    [Teardown]    Logout
+
+2.3 Edit2
+    [Documentation]    /api/user/edit?headQiniuKey=Fq_gbLTc3kkFJy3z2gIM_FRBVqI8
+    ...
+    ...    改头像
+    ...    message = 操作成功
+    [Tags]    user-controller
+    [Setup]    Login    ${mobile_used_0}
+    ${Resp}    Post Request    mysess    /api/user/edit?headQiniuKey=Fq_gbLTc3kkFJy3z2gIM_FRBVqI8
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    conn_db
+    ${image}    query    select img from linklaws_test.user where mobile= ${mobile_used_0} and state=1 order by id desc
+    Should match    ${image[0][0]}    Fq_gbLTc3kkFJy3z2gIM_FRBVqI8
+    Disconnect From Database
+    [Teardown]    Logout
+
+2.4 check_mobile1
+    [Documentation]    /api/user/mobile/check?mobile=19923803911
+    ...    检查手机号是否注册
+    ...    data = false
+    ...    message = 操作成功
+    [Tags]    user-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/user/mobile/check?mobile=${mobile_new_0}
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    ${data}    Evaluate    ${Resp_data}['data']
+    Should Be Equal As Strings    ${data}    False
+    [Teardown]    Logout
+
+2.5 check_mobile2
+    [Documentation]    /api/user/mobile/check?mobile=13923803989
+    ...    检查手机号是否注册
+    ...    data = False
+    ...    message = 操作成功
+    [Tags]    user-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/user/mobile/check?mobile=${mobile_used_0}
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    ${data}    Evaluate    ${Resp_data}['data']
+    Should Be Equal As Strings    ${data}    True
+    [Teardown]    Logout
+
+2.6 change_mobile
+    [Documentation]    POST /api/user/change/mobile?mobile=17700001160&code=666666
+    [Tags]    user-io-controller
+    [Setup]    Login    ${mobile_used_1}
+    ${code}    SendChangeMobile    ${mobile_new_1}
+    ${Resp}    Post Request    mysess    /api/user/change/mobile?mobile=${mobile_new_1}&code=${code}
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+3.1 changepassword
+    [Documentation]    POST /api/user/io/change/pwd?oldpwd=e10adc3949ba59abbe56e057f20f883e&newpwd=e10adc3949ba59abbe56e057f20f883e
+    [Tags]    user-io-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/user/io/change/pwd?oldpwd=${old_password}&newpwd=${new_password}
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+3.2 checkpassword
+    [Documentation]    POST /api/user/io/checkpwd?password=e10adc3949ba59abbe56e057f20f883e
+    [Tags]    user-io-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/user/io/checkpwd?password=${old_password}
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+3.3 findpassword_checkcode==
+    [Documentation]    POST /api/user/io/findpwd/checkcode?mobile=13923803989&code=666666&platform=ocoa
+    [Tags]    user-io-controller123
+    [Setup]    Login    ${mobile_used_0}
+    ${code}    SendCodeResetPassword    ${mobile_used_0}
+    ${Resp}    Post Request    mysess    /api/user/io/findpwd/checkcode?mobile=${mobile_used_0}&code=${code}&platform=ocoa
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+3.4 findpassword_resetpassword
+    [Documentation]    POST /api/user/io/findpwd/resetpwd?password=e10adc3949ba59abbe56e057f20f883e&repassword=e10adc3949ba59abbe56e057f20f883e
+    [Tags]    user-io-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/user/io/findpwd/resetpwd?password=${new_password}&repassword=${new_password}
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+ok 3.5 Login
+    [Tags]    user-io-controller
+    [Setup]
+    Login
+    [Teardown]    Logout
+
+3.6 Logout
+    [Tags]    user-io-controller
+    [Setup]    Login
+    Logout
+    [Teardown]
+
+3.7 Register
+    [Documentation]    Post /api/user/io/register?mobile=13911111111&checkcode=666666&name=Tom&password=e10adc3949ba59abbe56e057f20f883e&curPlatform=ocoa
+    [Tags]    user-io-controller
+    [Setup]    Login
+    ${code}    SendCodeRegister    ${mobile_new_0}
+    ${Resp}    Post Request    mysess    /api/user/io/register?mobile=${mobile_new_0}&checkcode=${code}&name=Tom&password=${password_0}&curPlatform=ocoa
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout

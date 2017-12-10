@@ -1,0 +1,265 @@
+*** Settings ***
+Resource          resource.txt
+
+*** Test Cases ***
+cause_core_children_civil
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=civil
+    ...    \ ==民事==
+    ...
+    ...
+    ...    ${Resp.status_code}==200 \ \ http返回200
+    ...    ${operate_result} \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 消息体中，message是“操作成功”
+    ...    ${chk_result} \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 消息体中，data与DB中的对比成功
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=civil
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from t_tool_cause where type=0 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+cause_core_children_penal1
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=penal1
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=penal1
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from t_tool_cause where type=1 and level=2 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+cause_core_children_penal2
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=penal2
+    ...    这个接口，逻辑不清楚，为什么返回这部分数据？
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=penal2
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from t_tool_cause where type=2 and level>1 and id>1999 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+no cause_core_children_penal
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=penal
+    ...
+    ...    SQL研究下怎么写
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=penal
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from t_tool_cause where type in (1,2) and level>1 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+no cause_core_children_all
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=all
+    ...
+    ...    SQL研究下怎么写
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=all
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from t_tool_cause where state = 'enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+cause_mini_children_0
+    [Documentation]    GET /api/base/cause/mini/children?id=0&type=0
+    ...    两个问题：
+    ...    1. isParent 写死了。
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/mini/children?id=0&type=0
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name,parentid,type,level,'true' as isParent from t_tool_cause where type=0 and level=1 and parentid=0 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+cause_mini_children_1
+    [Documentation]    GET /api/base/cause/mini/children?id=0&type=1
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/mini/children?id=0&type=1
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name,parentid,type,level,'true' as isParent from t_tool_cause where type=1 and level=1 and parentid=0 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+cause_mini_children_2
+    [Documentation]    GET /api/base/cause/mini/children?id=0&type=2
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/mini/children?id=0&type=2
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name,parentid,type,level,'true' as isParent from t_tool_cause where type=2 and level=1 and parentid=0 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+no cause_core_childrenwithparent_civl
+    [Documentation]    GET /api/base/cause/core/childrenWithParent/all?causeType=civil
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/childrenWithParent/all?causeType=civil
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql1}    Evaluate    "select id,name,parentname1 parentName,parentid1 parentId,concat_ws('-',name,parentname1,parentname2) leaf2Root from (select id, name, parentid parentid1, (select name from t_tool_cause where id=parentid1) as parentname1,(select parentid from t_tool_cause where parentid1=id) parentid2,(select name from t_tool_cause where id = parentid2) parentname2 from t_tool_cause where name in (select name from (select name,count(*) sum from t_tool_cause where type=0 and state='enable' group by name) aaa where aaa.sum>1) order by name) bbb;"
+    ${sql2}    Evaluate    "select id,name,parentid parentId from t_tool_cause where name in (select name from (select name,count(*) sum from t_tool_cause where type=0 and state='enable' group by name) aaa where aaa.sum=1);"
+    ${chk_result}    chk_result2    ${Resp.content}    1    ${sql1}    ${sql2}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+no cause_core_childrenwithparent_penal1
+    [Documentation]    GET /api/base/cause/core/childrenWithParent/all?causeType=civil
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/childrenWithParent/all?causeType=civil
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from t_tool_cause where type=0 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+no cause_core_childrenwithparent_penal2
+    [Documentation]    GET /api/base/cause/core/childrenWithParent/all?causeType=civil
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/childrenWithParent/all?causeType=civil
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from t_tool_cause where type=0 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+no cause_core_childrenwithparent_penal
+    [Documentation]    GET /api/base/cause/core/childrenWithParent/all?causeType=civil
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/childrenWithParent/all?causeType=civil
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from t_tool_cause where type=0 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+no cause_core_childrenwithparent_all
+    [Documentation]    GET /api/base/cause/core/childrenWithParent/all?causeType=civil
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/childrenWithParent/all?causeType=civil
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from t_tool_cause where type=0 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+domail_detail
+    [Documentation]    POST /api/base/domian/detail?id=8 HTTP/1.1
+    [Tags]    domain-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/base/domian/detail?id=8
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name,general_type generalType,type,parent_id parentId,create_time createTime,update_time updateTime,sort,state,img from domain where id=8;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+domail_mini_list_1
+    [Documentation]    GET /api/base/domian/mini/list?type=1 HTTP/1.1
+    ...    1: 专业
+    ...    2：行业
+    ...    3：领域
+    [Tags]    domain-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/domian/mini/list?type=1
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from domain where general_type=1 and parent_id<>0 order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+domail_mini_list_2
+    [Documentation]    GET /api/base/domian/mini/list?type=1 HTTP/1.1
+    ...    1: 专业
+    ...    2：行业
+    ...    3：领域
+    [Tags]    domain-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/domian/mini/list?type=2
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from domain where general_type=2 and parent_id<>0 order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+domail_mini_list_3
+    [Documentation]    GET /api/base/domian/mini/list?type=1 HTTP/1.1
+    ...    1: 专业
+    ...    2：行业
+    ...    3：领域
+    [Tags]    domain-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/domian/mini/list?type=3
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from domain where general_type=3 and parent_id<>0 order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+feedback_add
+    [Documentation]    POST /api/base/feedback/add?type=1&module=%E4%B8%AA%E4%BA%BA%E4%B8%AD%E5%BF%83&genre=10&title=%E9%97%AE%E9%A2%98%E5%8F%8D%E9%A6%88%E6%A0%87%E9%A2%98&content=This%20is%20a%20problem.
+    [Tags]    feedback-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/base/feedback/add?type=1&module=%E4%B8%AA%E4%BA%BA%E4%B8%AD%E5%BF%83&genre=10&title=%E9%97%AE%E9%A2%98%E5%8F%8D%E9%A6%88%E6%A0%87%E9%A2%98&content=This%20is%20a%20problem.
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${chk_result}    chk_result    ${Resp.content}    0
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+area_core_findareasidbyname
+    [Documentation]    POST /api/base/area/core/findAreasIdByName?provinceName=%E9%BB%91%E9%BE%99%E6%B1%9F&cityName=%E5%93%88%E5%B0%94%E6%BB%A8 HTTP/1.1
+    [Tags]    area-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/base/area/core/findAreasIdByName?provinceName=%E9%BB%91%E9%BE%99%E6%B1%9F&cityName=%E5%93%88%E5%B0%94%E6%BB%A8
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select 8 as provinceId, 60 as cityId from dual;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout
+
+area_core_provinces
+    [Documentation]    GET /api/base/area/core/provinces
+    [Tags]    area-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/area/core/provinces
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select area_code id,name from area where type =2;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    [Teardown]    Logout

@@ -1,0 +1,2 @@
+*** Test Cases ***
+init_1

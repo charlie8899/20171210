@@ -1,0 +1,83 @@
+*** Settings ***
+Documentation     My resource
+Library           C:/Python27/Lib/site-packages/robot/libraries/Dialogs.py
+Library           String
+Library           C:/Python27/Lib/site-packages/robot/libraries/Collections.py
+Library           C:/Python27/Lib/site-packages/RequestsLibrary/RequestsKeywords.py
+Library           DatabaseLibrary
+Library           C:/Python27/Lib/site-packages/robot/libraries/DateTime.py
+Variables         var.py
+Library           OperatingSystem
+Library           linklaws.py
+Library           C:/Python27/Lib/site-packages/MySQLdb/connections.py
+
+*** Keywords ***
+Login
+    [Arguments]    ${user}=${mobile_used_0}    ${password}=${password_0}
+    [Documentation]    /api/user/io/login?mobile=${user}&password=${password}&curPlatform=ocoa
+    ...    登陆
+    Create Session    mysess    http://test-apiv2.linklaws.com
+    ${Resp}    Post Request    mysess    /api/user/io/login?mobile=${user}&password=${password}&curPlatform=ocoa
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name,img,mobile,state,sex,law_firm lawFirm,email,province_id provinceId,province_name provinceName,city_id cityId,city_name cityName,major_id majorId,major_name majorName,vocation_id vocationId,vocation_name vocationName from user where mobile='${user}' and state=1;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    log    ------------------------Login------------------------
+
+Logout
+    [Arguments]    ${info}='------------------------Logout------------------------'
+    [Documentation]    /api/user/io/logout
+    ...    退出
+    ${Resp_logout}    Post Request    mysess    /api/user/io/logout
+    log    ${info}
+
+Conn_DB
+    [Arguments]    ${AA}='test'    # host='120.76.85.35',port=13307,user='linklaws',password='linklaws_123'
+    Connect To Database Using Custom Params    pymysql    host='120.76.85.35',port=13307,user='linklaws',password='linklaws_123',db='linklaws_test',charset='utf8'
+    Set Environment Variable    NLS_LANG    SIMPLIFIED_CHINESE_CHINA_UTF8
+
+SendChangeMobile
+    [Arguments]    ${new_mobile_num}
+    ${Resp}    Post Request    mysess    /api/user/code/sendChangeMobile?mobile=${new_mobile_num}&codeType=sms
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    conn_db
+    ${query_code_result}    query    select code from linklaws_test.code where account=${new_mobile_num} and state=1 order by id desc
+    log    ${query_code_result[0][0]}
+    ${change_mobile_code}    Set Variable    ${query_code_result[0][0]}
+    Disconnect From Database
+    [Return]    ${change_mobile_code}
+
+SendCodeRegister
+    [Arguments]    ${new_mobile_num}
+    ${Resp}    Get Request    mysess    /api/user/code/sendCodeRegister?mobile=${new_mobile_num}&codeType=sms
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    conn_db
+    ${query_code_result}    query    select code from linklaws_test.code where account=${new_mobile_num} and state=1 order by id desc
+    log    ${query_code_result[0][0]}
+    ${register_code}    Set Variable    ${query_code_result[0][0]}
+    Disconnect From Database
+    [Return]    ${register_code}
+
+SendCodeResetPassword
+    [Arguments]    ${mobile_num}
+    ${Resp}    Get Request    mysess    /api/user/code/sendCodeResetPassword?mobile=${mobile_num}&codeType=sms
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    conn_db
+    ${query_code_result}    query    select code from linklaws_test.code where account=${mobile_num} and state=1 order by id desc
+    log    ${query_code_result[0][0]}
+    ${reset_password_code}    Set Variable    ${query_code_result[0][0]}
+    Disconnect From Database
+    [Return]    ${reset_password_code}

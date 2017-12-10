@@ -1,0 +1,24 @@
+*** Settings ***
+Resource          resource.txt
+
+*** Test Cases ***
+DB - tuple
+    [Documentation]    select code from linklaws_test.code where account='19999999901'
+    [Timeout]
+    conn_DB
+    ${query_code_result}    Query    select id,name,parentid,type,level,'true' as isParent from t_tool_cause where type=0 and level=1 and parentid=0 and state='enable' order by id;
+    Disconnect From Database
+    log    ${query_code_result[0]}
+    log    ${query_code_result[1]}
+    log    ${query_code_result[2]}
+    ${test}    Set Variable    @{query_code_result}[0][0]
+    ${sub}    Get Substring    ${test}    1    3
+    ${sub}=    Replace String    ${test}    0    9    -1
+
+123
+    ${A}    Evaluate    ((1,u'民事'), (2,u'刑事一'), (3, '刑事二'))
+    ${B}    Evaluate    [{'id': 1, 'name': '民事'}, {'id': 2, 'name': '刑事一'}, {'id': 3, 'name': '刑事二'}]
+    ${MMM}    chk_result     ${A}    ${B}
+    log    ${MMM}
+
+DB - dict

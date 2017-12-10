@@ -1,0 +1,250 @@
+*** Settings ***
+Resource          resource.txt
+
+*** Test Cases ***
+cause_core_children_civil
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=civil
+    ...    \ ==民事==
+    ...
+    ...
+    ...    ${Resp.status_code}==200 \ \ http返回200
+    ...    ${operate_result} \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 消息体中，message是“操作成功”
+    ...    ${chk_result} \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 消息体中，data与DB中的对比成功
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=civil
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${operate_result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${operate_result}    操作成功
+    ${api_result}    Evaluate    ${Resp_data}['data']
+    conn_db
+    ${db_result}    query    select id,name from t_tool_cause where type=0 and state='enable' order by id;
+    Disconnect From Database
+    ${chk_result}    chk_db    ${db_result}    ${api_result}
+    Should match    ${chk_result}    True
+    [Teardown]    Logout
+
+cause_core_children_penal1
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=penal1
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=penal1
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    ${api_result}    Evaluate    ${Resp_data}['data']
+    conn_db
+    ${db_result}    query    select id,name from t_tool_cause where type=1 and level=2 and state='enable' order by id;
+    Disconnect From Database
+    ${chk_result}    chk_db    ${db_result}    ${api_result}
+    Should match    ${chk_result}    True
+    [Teardown]    Logout
+
+cause_core_children_penal2
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=penal2
+    ...    这个接口，逻辑不清楚，为什么返回这部分数据？
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=penal2
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    ${api_result}    Evaluate    ${Resp_data}['data']
+    conn_db
+    ${db_result}    query    select id,name from t_tool_cause where type=2 and level>1 and id>1999 and state='enable' order by id;
+    Disconnect From Database
+    ${chk_result}    chk_db    ${db_result}    ${api_result}
+    Should match    ${chk_result}    True
+    [Teardown]    Logout
+
+cause_core_children_penal
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=penal
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=penal
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    ${api_result}    Evaluate    ${Resp_data}['data']
+    conn_db
+    ${db_result}    query    select id,name from t_tool_cause where type in (1,2) and level>1 and state='enable' order by id;
+    Disconnect From Database
+    ${chk_result}    chk_db    ${db_result}    ${api_result}
+    Should match    ${chk_result}    True
+    [Teardown]    Logout
+
+cause_core_children_all
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=all
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=all
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    ${api_result}    Evaluate    ${Resp_data}['data']
+    log    ${api_result}
+    conn_db
+    ${db_result}    query    select id,name from t_tool_cause where state = 'enable' order by id;
+    Disconnect From Database
+    ${chk_result}    chk_db    ${db_result}    ${api_result}
+    Should match    ${chk_result}    True
+    [Teardown]    Logout
+
+cause_mini_children_0
+    [Documentation]    GET /api/base/cause/mini/children?id=0&type=0
+    ...    两个问题：
+    ...    1. isParent 写死了。
+    ...    2. 考虑字典排序问题。
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/mini/children?id=0&type=0
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    ${api_result}    Evaluate    ${Resp_data}['data']
+    log    ${api_result}
+    conn_db
+    ${db_result}    query    select id,name,parentid,type,level,'true' as isParent from t_tool_cause where type=0 and level=1 and parentid=0 and state='enable' order by id;
+    Disconnect From Database
+    ${chk_result}    chk_db    ${db_result}    ${api_result}
+    Should match    ${chk_result}    True
+    [Teardown]    Logout
+
+cause_mini_children_1
+    [Documentation]    GET /api/base/cause/mini/children?id=0&type=1
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/mini/children?id=0&type=1
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    ${api_result}    Evaluate    ${Resp_data}['data']
+    log    ${api_result}
+    conn_db
+    ${db_result}    query    select id,name,parentid,type,level,'true' as isParent from t_tool_cause where type=1 and level=1 and parentid=0 and state='enable' order by id;
+    Disconnect From Database
+    ${chk_result}    chk_db    ${db_result}    ${api_result}
+    Should match    ${chk_result}    True
+    [Teardown]    Logout
+
+cause_mini_children_2
+    [Documentation]    GET /api/base/cause/mini/children?id=0&type=2
+    [Tags]    cause-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/cause/mini/children?id=0&type=2
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    ${api_result}    Evaluate    ${Resp_data}['data']
+    log    ${api_result}
+    conn_db
+    ${db_result}    query    select id,name,parentid,type,level,'true' as isParent from t_tool_cause where type=2 and level=1 and parentid=0 and state='enable' order by id;
+    Disconnect From Database
+    ${chk_result}    chk_db    ${db_result}    ${api_result}
+    Should match    ${chk_result}    True
+    [Teardown]    Logout
+
+domail_detail
+    [Documentation]    POST /api/base/domian/detail?id=32 HTTP/1.1
+    [Tags]    domain-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/base/domian/detail?id=32
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+domail_mini_list_1
+    [Documentation]    GET /api/base/domian/mini/list?type=1 HTTP/1.1
+    ...    1: 专业
+    ...    2：行业
+    ...    3：领域
+    [Tags]    domain-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/domian/mini/list?type=1
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+domail_mini_list_2
+    [Documentation]    GET /api/base/domian/mini/list?type=1 HTTP/1.1
+    ...    1: 专业
+    ...    2：行业
+    ...    3：领域
+    [Tags]    domain-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/domian/mini/list?type=2
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+domail_mini_list_3
+    [Documentation]    GET /api/base/domian/mini/list?type=1 HTTP/1.1
+    ...    1: 专业
+    ...    2：行业
+    ...    3：领域
+    [Tags]    domain-controller
+    [Setup]    Login
+    ${Resp}    Get Request    mysess    /api/base/domian/mini/list?type=3
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+feedback_add
+    [Documentation]    POST /api/base/feedback/add?type=1&module=%E4%B8%AA%E4%BA%BA%E4%B8%AD%E5%BF%83&genre=10&title=%E9%97%AE%E9%A2%98%E5%8F%8D%E9%A6%88%E6%A0%87%E9%A2%98&content=This%20is%20a%20problem.
+    [Tags]    feedback-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/base/feedback/add?type=1&module=%E4%B8%AA%E4%BA%BA%E4%B8%AD%E5%BF%83&genre=10&title=%E9%97%AE%E9%A2%98%E5%8F%8D%E9%A6%88%E6%A0%87%E9%A2%98&content=This%20is%20a%20problem.
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+2cause_core_children_civil
+    [Documentation]    GET /api/base/cause/core/children/all?causeType=civil
+    ...    \ ==民事==
+    ...
+    ...
+    ...    ${Resp.status_code}==200 \ \ http返回200
+    ...    ${operate_result} \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 消息体中，message是“操作成功”
+    ...    ${chk_result} \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 消息体中，data与DB中的对比成功
+    [Tags]    cause-controller
+    [Setup]    Login
+    log    ------------------------Begin------------------------
+    ${Resp}    Get Request    mysess    /api/base/cause/core/children/all?causeType=civil
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${sql}    Evaluate    "select id,name from t_tool_cause where type=0 and state='enable' order by id;"
+    ${chk_result}    chk_result    ${Resp.content}    1    ${sql}
+    Should match    ${chk_result}    success
+    log    ------------------------End------------------------
+    [Teardown]    Logout

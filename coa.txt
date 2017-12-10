@@ -1,0 +1,43 @@
+*** Settings ***
+Resource          resource.txt
+
+*** Test Cases ***
+team_add
+    [Documentation]    POST /api/coa/team/add?teamName=From%20Interface001 HTTP/1.1
+    [Tags]    team-controller
+    [Setup]    Login
+    conn_db
+    ${query_code_result}    query    select max(id)+1 from linklaws_test.t_coa_team
+    ${id}    Set Variable    ${query_code_result[0][0]}
+    Disconnect From Database
+    ${Resp}    Post Request    mysess    /api/coa/team/add?teamName=From%20Interface${id}
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+team_detail
+    [Documentation]    POST /api/coa/team/detail?teamId=272 HTTP/1.1
+    [Tags]    team-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/coa/team/detail?teamId=${teamid_0}
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
+
+team_edit
+    [Documentation]    /api/coa/team/edit?teamId=272&teamName=abc&description=TEST&logoQiniuKey=Fq_gbLTc3kkFJy3z2gIM_FRBVqI8
+    [Tags]    team-controller
+    [Setup]    Login
+    ${Resp}    Post Request    mysess    /api/coa/team/edit?teamId=${teamid_0}&teamName=EDIT+${teamid_0}&description=TEST&logoQiniuKey=Fq_gbLTc3kkFJy3z2gIM_FRBVqI8
+    Run Keyword If    ${Resp.status_code}==200    log    Sucess
+    ...    ELSE    log    Error
+    ${Resp_data}    to json    ${Resp.content}
+    ${result}    Evaluate    ${Resp_data}['message']
+    Should Be Equal As Strings    ${result}    操作成功
+    [Teardown]    Logout
